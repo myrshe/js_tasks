@@ -72,8 +72,26 @@ export type ApiResponse<T> = (
     }
 );
 
-export function promisify(arg: unknown): unknown {
-    return null;
+export function promisify<T>(fn: (callback: (response: ApiResponse<T>) => void) => void): () => Promise<T> {
+    return () => new Promise((resolve, reject) => {
+        fn((response) => {
+            if (response.status === 'success') {
+                resolve(response.data);
+            } else {
+                reject(new Error(response.error));
+            }
+        });
+    });
+}
+
+export function promisifyAll(obj: Record<string, (callback: (response: ApiResponse<any>) => void) => void>): Record<string, () => Promise<any>> {
+    const result: Record<string, () => Promise<any>> = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            result[key] = promisify(obj[key]);
+        }
+    }
+    return result;
 }
 
 const oldApi = {
@@ -103,12 +121,7 @@ const oldApi = {
     }
 };
 
-export const api = {
-    requestAdmins: promisify(oldApi.requestAdmins),
-    requestUsers: promisify(oldApi.requestUsers),
-    requestCurrentServerTime: promisify(oldApi.requestCurrentServerTime),
-    requestCoffeeMachineQueueLength: promisify(oldApi.requestCoffeeMachineQueueLength)
-};
+export const api = promisifyAll(oldApi);
 
 function logPerson(person: Person) {
     console.log(
@@ -117,21 +130,26 @@ function logPerson(person: Person) {
 }
 
 async function startTheApp() {
-    console.log('Admins:');
-    (await api.requestAdmins()).forEach(logPerson);
-    console.log();
+    try {
+        console.log('Admins:');
+        (await api.requestAdmins()).forEach(logPerson);
+        console.log();
 
-    console.log('Users:');
-    (await api.requestUsers()).forEach(logPerson);
-    console.log();
+        console.log('Users:');
+        (await api.requestUsers()).forEach(logPerson);
+        console.log();
 
-    console.log('Server time:');
-    console.log(`   ${new Date(await api.requestCurrentServerTime()).toLocaleString()}`);
-    console.log();
+        console.log('Server time:');
+        console.log(`   ${new Date(await api.requestCurrentServerTime()).toLocaleString()}`);
+        console.log();
 
-    console.log('Coffee machine queue length:');
-    console.log(`   ${await api.requestCoffeeMachineQueueLength()}`);
+        console.log('Coffee machine queue length:');
+        console.log(`   ${await api.requestCoffeeMachineQueueLength()}`);
+    } catch (e) {
+        console.log(`Error: "${(e as Error).message}", but it's fine, sometimes errors are inevitable.`);
+    }
 }
+
 
 startTheApp().then(
     () => {
