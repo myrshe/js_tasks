@@ -55,7 +55,7 @@ export const persons: Person[] = [
 
 export function logPerson(person: Person) {
     let additionalInformation: string;
-    if (person.role) {
+    if ( 'role' in person) {
         additionalInformation = person.role;
     } else {
         additionalInformation = person.occupation;
@@ -67,3 +67,4 @@ persons.forEach(logPerson);
 
 // In case you are stuck:
 // https://www.typescriptlang.org/docs/handbook/2/narrowing.html#the-in-operator-narrowing
+

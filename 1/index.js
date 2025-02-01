@@ -1,3 +1,4 @@
+"use strict";
 /*
 
     Things to cover:
@@ -32,14 +33,10 @@ Exercise:
     Given the data, define the interface "User" and use it accordingly.
 
 */
-
-export interface User {
-    name: string;
-    age: number;
-    occupation: string;
-}
-
-export const users: User[] = [
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.users = void 0;
+exports.logPerson = logPerson;
+exports.users = [
     {
         name: 'Max Mustermann',
         age: 25,
@@ -51,14 +48,10 @@ export const users: User[] = [
         occupation: 'Astronaut'
     }
 ];
-
-export function logPerson(user: User) {
-    console.log(` - ${user.name}, ${user.age}`);
+function logPerson(user) {
+    console.log(" - ".concat(user.name, ", ").concat(user.age));
 }
-
 console.log('Users:');
-users.forEach(logPerson);
-
-
+exports.users.forEach(logPerson);
 // In case you are stuck:
 // https://www.typescriptlang.org/docs/handbook/2/objects.html

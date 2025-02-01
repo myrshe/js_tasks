@@ -43,17 +43,22 @@ Bonus:
  * @param {Array} input
  * @return {Array | Function}
  */
-export function map(mapper, input) {
-    if (arguments.length === 0) {
+
+//общий тип для функций, которые могут принимать разное количество аргументов
+type CurryFunction<T, U> = {
+    (): CurryFunction<T, U>;
+    (arg1: T): CurryFunction<T, U> | U;
+    (arg1: T, arg2: T): U;
+};
+export function map<T, U>(mapper: (value: T) => U, input: T[]): U[];
+export function map<T, U>(mapper: (value: T) => U): (input: T[]) => U[];
+export function map(): typeof map;
+export function map<T, U>(mapper?: (value: T) => U, input?: T[]): U[] | ((input: T[]) => U[]) | typeof map {
+    if (mapper === undefined) {
         return map;
     }
-    if (arguments.length === 1) {
-        return function subFunction(subInput) {
-            if (arguments.length === 0) {
-                return subFunction;
-            }
-            return subInput.map(mapper);
-        };
+    if (input === undefined) {
+        return (subInput: T[]) => subInput.map(mapper);
     }
     return input.map(mapper);
 }
@@ -74,17 +79,20 @@ export function map(mapper, input) {
  * @param {Array} input
  * @return {Array | Function}
  */
-export function filter(filterer, input) {
-    if (arguments.length === 0) {
+export function filter<T>(filterer: (value: T) => boolean, input: T[]): T[];
+
+export function filter<T>(filterer: (value: T) => boolean): (input: T[]) => T[];
+
+
+export function filter(): typeof filter;
+
+export function filter<T>(filterer?: (value: T) => boolean, input?: T[]): T[] | ((input: T[]) => T[]) | typeof filter {
+    if (filterer === undefined) {
         return filter;
+
     }
-    if (arguments.length === 1) {
-        return function subFunction(subInput) {
-            if (arguments.length === 0) {
-                return subFunction;
-            }
-            return subInput.filter(filterer);
-        };
+    if (input === undefined) {
+        return (subInput: T[]) => subInput.filter(filterer);
     }
     return input.filter(filterer);
 }
@@ -117,33 +125,30 @@ export function filter(filterer, input) {
  * @param {Array} input
  * @return {* | Function}
  */
-export function reduce(reducer, initialValue, input) {
-    if (arguments.length === 0) {
+
+export function reduce<T, U>(reducer: (acc: U, value: T) => U, initialValue: U, input: T[]): U;
+
+export function reduce<T, U>(reducer: (acc: U, value: T) => U, initialValue: U): (input: T[]) => U;
+
+export function reduce<T, U>(reducer: (acc: U, value: T) => U): CurryFunction<U, (input: T[]) => U>;
+
+export function reduce(): typeof reduce;
+
+export function reduce<T, U>(reducer?: (acc: U, value: T) => U, initialValue?: U, input?: T[]): U | ((input: T[]) => U) | CurryFunction<U, (input: T[]) => U> | typeof reduce {
+    if (reducer === undefined) {
         return reduce;
     }
-    if (arguments.length === 1) {
-        return function subFunction(subInitialValue, subInput) {
-            if (arguments.length === 0) {
-                return subFunction;
+    if (initialValue === undefined) {
+        return (subInitialValue: U, subInput?: T[]) => {
+            if (subInput === undefined) {
+                return (subSubInput: T[]) => subSubInput.reduce(reducer, subInitialValue);
             }
-            if (arguments.length === 1) {
-                return function subSubFunction(subSubInput) {
-                    if (arguments.length === 0) {
-                        return subSubFunction;
-                    }
-                    return subSubInput.reduce(reducer, subInitialValue);
-                };
-            }
-            return subInput.reduce(reducer,subInitialValue);
-        }
-    }
-    if (arguments.length === 2) {
-        return function subFunction(subInput) {
-            if (arguments.length === 0) {
-                return subFunction;
-            }
-            return subInput.reduce(reducer, initialValue);
+            return subInput.reduce(reducer, subInitialValue);
+
         };
+    }
+    if (input === undefined) {
+        return (subInput: T[]) => subInput.reduce(reducer, initialValue);
     }
     return input.reduce(reducer, initialValue);
 }
@@ -160,17 +165,15 @@ export function reduce(reducer, initialValue, input) {
  * @param {Number} b
  * @return {Number | Function}
  */
-export function add(a, b) {
-    if (arguments.length === 0) {
+export function add(a: number, b: number): number;
+export function add(a: number): (b: number) => number;
+export function add(): typeof add;
+export function add(a?: number, b?: number): number | ((b: number) => number) | typeof add {
+    if (a === undefined) {
         return add;
     }
-    if (arguments.length === 1) {
-        return function subFunction(subB) {
-            if (arguments.length === 0) {
-                return subFunction;
-            }
-            return a + subB;
-        };
+    if (b === undefined) {
+        return (subB: number) => a + subB;
     }
     return a + b;
 }
@@ -188,20 +191,22 @@ export function add(a, b) {
  * @param {Number} b
  * @return {Number | Function}
  */
-export function subtract(a, b) {
-    if (arguments.length === 0) {
+export function subtract(a: number, b: number): number;
+
+export function subtract(a: number): (b: number) => number;
+
+export function subtract(): typeof subtract;
+
+export function subtract(a?: number, b?: number): number | ((b: number) => number) | typeof subtract {
+    if (a === undefined) {
         return subtract;
     }
-    if (arguments.length === 1) {
-        return function subFunction(subB) {
-            if (arguments.length === 0) {
-                return subFunction;
-            }
-            return a - subB;
-        };
+    if (b === undefined) {
+        return (subB: number) => a - subB;
     }
     return a - b;
 }
+
 
 /**
  * 2 arguments passed: returns value of property
@@ -217,17 +222,18 @@ export function subtract(a, b) {
  * @param {String} propName
  * @return {* | Function}
  */
-export function prop(obj, propName) {
-    if (arguments.length === 0) {
+export function prop<T, K extends keyof T>(obj: T, propName: K): T[K];
+
+export function prop<T, K extends keyof T>(obj: T): (propName: K) => T[K];
+
+export function prop(): typeof prop;
+
+export function prop<T, K extends keyof T>(obj?: T, propName?: K): T[K] | ((propName: K) => T[K]) | typeof prop {
+    if (obj === undefined) {
         return prop;
     }
-    if (arguments.length === 1) {
-        return function subFunction(subPropName) {
-            if (arguments.length === 0) {
-                return subFunction;
-            }
-            return obj[subPropName];
-        };
+    if (propName === undefined) {
+        return (subPropName: K) => obj[subPropName];
     }
     return obj[propName];
 }
@@ -253,17 +259,21 @@ export function prop(obj, propName) {
  * @param {Function[]} functions
  * @return {*}
  */
-export function pipe(...functions) {
-    if (arguments.length === 0) {
+type PipeFunction = (...args: any[]) => any;
+
+export function pipe(...functions: PipeFunction[]): (...args: any[]) => any;
+
+export function pipe(): typeof pipe;
+
+export function pipe(...functions: PipeFunction[]): (...args: any[]) => any | typeof pipe {
+    if (functions.length === 0) {
         return pipe;
     }
-    return function subFunction() {
-        let nextArguments = Array.from(arguments);
-        let result;
+    return (...args: any[]) => {
+        let result = args;
         for (const func of functions) {
-            result = func(...nextArguments);
-            nextArguments = [result];
+            result = [func(...result)];
         }
-        return result;
+        return result[0];
     };
 }
